@@ -1,7 +1,7 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use warp::reject::Reject;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct Question {
   pub(crate) id: QuestionId,
   pub(crate) title: String,
@@ -9,7 +9,7 @@ pub(crate) struct Question {
   pub(crate) tags: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Eq, Hash)]
 pub(crate) struct QuestionId(pub String);
 
 impl Question {
@@ -26,3 +26,9 @@ impl Question {
 #[derive(Debug)]
 pub(crate) struct InvalidId;
 impl Reject for InvalidId {}
+
+#[derive(Debug)]
+pub(crate) struct Pagination {
+  pub(crate) start: usize,
+  pub(crate) end: usize,
+}

@@ -1,13 +1,19 @@
+pub mod error;
 mod model;
+mod question_repo;
 
-use std::i32;
+use std::collections::HashMap;
 
-use model::{InvalidId, Question, QuestionId};
+use error::Error;
+use model::{InvalidId, Pagination, Question};
+use question_repo::Store;
 use reqwest::Method;
 use warp::{cors::CorsForbidden, http::StatusCode, Filter, Rejection, Reply};
 
 #[tokio::main]
 async fn main() {
+  let store = Store::new();
+  let store_filter = warp::any().map(move || store.clone());
   let cors = warp::cors()
     .allow_any_origin()
     .allow_header("content-type")
@@ -16,6 +22,8 @@ async fn main() {
   let get_items = warp::get()
     .and(warp::path("questions"))
     .and(warp::path::end())
+    .and(warp::query())
+    .and(store_filter)
     .and_then(get_questions)
     .recover(return_error);
 
@@ -40,16 +48,23 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
   }
 }
 
-async fn get_questions() -> Result<impl Reply, Rejection> {
-  let question = Question::new(
-    QuestionId(String::from("3")),
-    "What\'s the fuzz about",
-    "Tell me more!",
-    Some(&["faq".to_string()]),
-  );
+async fn get_questions(params: HashMap<String, String>, repo: Store) -> Result<impl Reply, Rejection> {
+  let mut res: &[&Question] = &repo.questions.values().collect::<Vec<_>>();
 
-  match question.id.0.parse::<i32>() {
-    Ok(_) => Ok(warp::reply::json(&question)),
-    Err(_) => Err(warp::reject::custom(InvalidId)),
+  if !params.is_empty() {
+    let Pagination { start, end } = extract_pagination(params)?;
+    res = &res[start..end];
+  }
+
+  Ok(warp::reply::json(&res))
+}
+
+fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
+  match (params.get("start"), params.get("end")) {
+    (Some(start), Some(end)) => Ok(Pagination {
+      start: start.parse::<usize>()?,
+      end: end.parse::<usize>()?,
+    }),
+    _ => Err(Error::MissingParameters),
   }
 }
