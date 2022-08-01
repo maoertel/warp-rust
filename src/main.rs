@@ -2,14 +2,17 @@ pub mod error;
 mod model;
 mod question_repo;
 
+use std::sync::Arc;
+
 use question_repo::Store;
 use reqwest::Method;
 use warp::Filter;
 
 #[tokio::main]
 async fn main() {
-  let store = Store::new();
+  let store = Arc::new(Store::new());
   let store_filter = warp::any().map(move || store.clone());
+
   let cors = warp::cors()
     .allow_any_origin()
     .allow_header("content-type")

@@ -1,10 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use warp::{Rejection, Reply};
 
 use crate::model::{Pagination, Question, QuestionId};
 
-#[derive(Clone)]
 pub(crate) struct Store {
   pub(crate) questions: HashMap<QuestionId, Question>,
 }
@@ -21,12 +20,10 @@ impl Store {
     }
   }
 
-  pub fn add_question(mut self, question: Question) -> Self {
-    self.questions.insert(question.id.clone(), question);
-    self
-  }
-
-  pub(crate) async fn get_questions(params: HashMap<String, String>, repo: Store) -> Result<impl Reply, Rejection> {
+  pub(crate) async fn get_questions(
+    params: HashMap<String, String>,
+    repo: Arc<Store>,
+  ) -> Result<impl Reply, Rejection> {
     let mut res: &[&Question] = &repo.questions.values().collect::<Vec<_>>();
 
     if !params.is_empty() {
