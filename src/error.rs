@@ -31,6 +31,11 @@ impl From<ParseIntError> for Error {
 pub(crate) async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
   if let Some(error) = r.find::<CorsForbidden>() {
     Ok(warp::reply::with_status(error.to_string(), StatusCode::FORBIDDEN))
+  } else if let Some(error) = r.find::<Error>() {
+    Ok(warp::reply::with_status(
+      error.to_string(),
+      StatusCode::RANGE_NOT_SATISFIABLE,
+    ))
   } else if let Some(InvalidId) = r.find::<InvalidId>() {
     Ok(warp::reply::with_status(
       "No valid ID presented".to_string(),
