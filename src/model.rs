@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use warp::reject::Reject;
+
+use crate::error::Error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct Question {
@@ -31,4 +35,16 @@ impl Reject for InvalidId {}
 pub(crate) struct Pagination {
   pub(crate) start: usize,
   pub(crate) end: usize,
+}
+
+impl Pagination {
+  pub(crate) fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
+    match (params.get("start"), params.get("end")) {
+      (Some(start), Some(end)) => Ok(Pagination {
+        start: start.parse::<usize>()?,
+        end: end.parse::<usize>()?,
+      }),
+      _ => Err(Error::MissingParameters),
+    }
+  }
 }
