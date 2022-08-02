@@ -1,14 +1,14 @@
 use std::num::ParseIntError;
 
 use reqwest::StatusCode;
-use warp::{cors::CorsForbidden, reject::Reject, Rejection, Reply};
-
-use crate::model::InvalidId;
+use uuid::Uuid;
+use warp::{body::BodyDeserializeError, cors::CorsForbidden, reject::Reject, Rejection, Reply};
 
 #[derive(Debug)]
 pub enum Error {
   ParseError(std::num::ParseIntError),
   MissingParameters,
+  QuestionNotFound(Uuid),
 }
 
 impl Reject for Error {}
@@ -18,6 +18,7 @@ impl std::fmt::Display for Error {
     match self {
       Error::ParseError(error) => write!(f, "{}", error),
       Error::MissingParameters => write!(f, "Missing parameter"),
+      Error::QuestionNotFound(id) => write!(f, "Question with id {id} not found."),
     }
   }
 }
@@ -36,9 +37,9 @@ pub(crate) async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> 
       error.to_string(),
       StatusCode::RANGE_NOT_SATISFIABLE,
     ))
-  } else if let Some(InvalidId) = r.find::<InvalidId>() {
+  } else if let Some(error) = r.find::<BodyDeserializeError>() {
     Ok(warp::reply::with_status(
-      "No valid ID presented".to_string(),
+      error.to_string(),
       StatusCode::UNPROCESSABLE_ENTITY,
     ))
   } else {

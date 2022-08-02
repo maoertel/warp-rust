@@ -5,7 +5,10 @@ use reqwest::StatusCode;
 use uuid::Uuid;
 use warp::{Rejection, Reply};
 
-use crate::model::{Pagination, Question, QuestionInput};
+use crate::{
+  error::Error,
+  model::{Pagination, Question, QuestionInput},
+};
 
 pub(crate) struct Store {
   pub(crate) questions: RwLock<HashMap<Uuid, Question>>,
@@ -42,5 +45,35 @@ impl Store {
     let question = Question::from(question_input);
     repo.questions.write().insert(question.id, question);
     Ok(warp::reply::with_status("Question added".to_string(), StatusCode::OK))
+  }
+
+  pub(crate) async fn update_question(
+    repo: Arc<Store>,
+    id: Uuid,
+    QuestionInput { title, content, tags }: QuestionInput,
+  ) -> Result<impl Reply, Rejection> {
+    let question = Question {
+      id,
+      title,
+      content,
+      tags,
+    };
+    match repo.questions.write().get_mut(&id) {
+      Some(q) => {
+        *q = question;
+        Ok(warp::reply::with_status(
+          format!("Question with id {id} updated."),
+          StatusCode::OK,
+        ))
+      }
+      None => Err(warp::reject::custom(Error::QuestionNotFound(id))),
+    }
+  }
+
+  pub(crate) async fn delete_question(repo: Arc<Store>, id: Uuid) -> Result<impl Reply, Rejection> {
+    match repo.questions.write().remove(&id) {
+      Some(_) => Ok(warp::reply::with_status("Question deleted", StatusCode::OK)),
+      None => Err(warp::reject::custom(Error::QuestionNotFound(id))),
+    }
   }
 }

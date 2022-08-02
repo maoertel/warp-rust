@@ -1,27 +1,13 @@
+use std::sync::Arc;
 use uuid::Uuid;
 use warp::Filter;
-pub mod error;
-mod model;
-mod question_repo;
-mod question_routes;
 
-use std::sync::Arc;
+use crate::question_repo::Store;
 
-use error::return_error;
-
-use question_repo::Store;
-use reqwest::Method;
-
-#[tokio::main]
-async fn main() {
-  let store = Arc::new(Store::new());
+pub(crate) fn create(store: Arc<Store>) -> impl Filter {
   let store_filter = warp::any().map(move || store.clone());
-  let path = "questions";
 
-  let cors = warp::cors()
-    .allow_any_origin()
-    .allow_header("content-type")
-    .allow_methods(&[Method::PUT, Method::POST, Method::DELETE, Method::GET]);
+  let path = "questions";
 
   let get_questions = warp::get()
     .and(warp::path(path))
@@ -52,12 +38,5 @@ async fn main() {
     .and(warp::path::end())
     .and_then(Store::delete_question);
 
-  let routes = get_questions
-    .or(add_question)
-    .or(update_question)
-    .or(delete_question)
-    .with(cors)
-    .recover(return_error);
-
-  warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+  get_questions.or(add_question).or(update_question).or(delete_question)
 }

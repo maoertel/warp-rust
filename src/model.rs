@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use warp::reject::Reject;
 
 use crate::error::Error;
 
@@ -21,21 +20,6 @@ pub(crate) struct QuestionInput {
   pub(crate) tags: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Eq, Hash)]
-pub(crate) struct QuestionId(pub String);
-
-impl Question {
-  pub fn new(title: &str, content: &str, tags: Option<&[String]>) -> Question {
-    let id = Uuid::new_v4();
-    Question {
-      id,
-      title: title.to_string(),
-      content: content.to_string(),
-      tags: tags.map(|t| t.to_vec()),
-    }
-  }
-}
-
 impl From<QuestionInput> for Question {
   fn from(QuestionInput { title, content, tags }: QuestionInput) -> Self {
     let id = Uuid::new_v4();
@@ -47,10 +31,6 @@ impl From<QuestionInput> for Question {
     }
   }
 }
-
-#[derive(Debug)]
-pub(crate) struct InvalidId;
-impl Reject for InvalidId {}
 
 #[derive(Debug)]
 pub(crate) struct Pagination {
