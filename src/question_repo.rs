@@ -1,16 +1,18 @@
 use std::{collections::HashMap, sync::Arc};
 
 use parking_lot::RwLock;
+use reqwest::StatusCode;
+use uuid::Uuid;
 use warp::{Rejection, Reply};
 
-use crate::model::{Pagination, Question, QuestionId};
+use crate::model::{Pagination, Question, QuestionInput};
 
 pub(crate) struct Store {
-  pub(crate) questions: RwLock<HashMap<QuestionId, Question>>,
+  pub(crate) questions: RwLock<HashMap<Uuid, Question>>,
 }
 
 impl Store {
-  fn init() -> RwLock<HashMap<QuestionId, Question>> {
+  fn init() -> RwLock<HashMap<Uuid, Question>> {
     let file = include_str!("../questions.json");
     RwLock::new(serde_json::from_str(file).expect("Not able to read question.json."))
   }
@@ -34,5 +36,11 @@ impl Store {
     }
 
     Ok(warp::reply::json(&questions))
+  }
+
+  pub(crate) async fn add_question(repo: Arc<Store>, question_input: QuestionInput) -> Result<impl Reply, Rejection> {
+    let question = Question::from(question_input);
+    repo.questions.write().insert(question.id, question);
+    Ok(warp::reply::with_status("Question added".to_string(), StatusCode::OK))
   }
 }
