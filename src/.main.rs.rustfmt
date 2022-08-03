@@ -1,7 +1,6 @@
-pub mod error;
-
 use uuid::Uuid;
 use warp::Filter;
+pub mod error;
 mod model;
 mod question_repo;
 mod question_routes;

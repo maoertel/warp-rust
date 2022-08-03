@@ -32,6 +32,13 @@ impl From<QuestionInput> for Question {
   }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct Answer {
+  pub(crate) id: Uuid,
+  pub(crate) content: String,
+  pub(crate) question_id: Uuid,
+}
+
 #[derive(Debug)]
 pub(crate) struct Pagination {
   pub(crate) start: usize,

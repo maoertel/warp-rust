@@ -7,11 +7,12 @@ use warp::{Rejection, Reply};
 
 use crate::{
   error::Error,
-  model::{Pagination, Question, QuestionInput},
+  model::{Answer, Pagination, Question, QuestionInput},
 };
 
 pub(crate) struct Store {
   pub(crate) questions: RwLock<HashMap<Uuid, Question>>,
+  pub(crate) answers: RwLock<HashMap<Uuid, Answer>>,
 }
 
 impl Store {
@@ -23,6 +24,7 @@ impl Store {
   pub fn new() -> Self {
     Store {
       questions: Self::init(),
+      answers: RwLock::new(HashMap::new()),
     }
   }
 
@@ -74,6 +76,22 @@ impl Store {
     match repo.questions.write().remove(&id) {
       Some(_) => Ok(warp::reply::with_status("Question deleted", StatusCode::OK)),
       None => Err(warp::reject::custom(Error::QuestionNotFound(id))),
+    }
+  }
+
+  pub(crate) async fn add_answer(repo: Arc<Store>, params: HashMap<String, String>) -> Result<impl Reply, Rejection> {
+    match (params.get("content"), params.get("questionId")) {
+      (Some(content), Some(question_id)) => {
+        let id = Uuid::new_v4();
+        let answer = Answer {
+          id,
+          content: String::from(content),
+          question_id: Uuid::parse_str(question_id).unwrap(),
+        };
+        repo.answers.write().insert(id, answer);
+        Ok(warp::reply::with_status("Answer added", StatusCode::OK))
+      }
+      _ => Err(warp::reject::custom(Error::MissingParameters)),
     }
   }
 }
