@@ -1,6 +1,6 @@
 use crate::model::{Answer, Question};
-use parking_lot::RwLock;
 use std::collections::HashMap;
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 pub(crate) struct Store {

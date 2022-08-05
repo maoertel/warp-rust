@@ -13,7 +13,7 @@ pub(crate) async fn add(repo: Arc<Store>, params: HashMap<String, String>) -> Re
         content: String::from(content),
         question_id: Uuid::parse_str(question_id).unwrap(),
       };
-      repo.answers.write().insert(id, answer);
+      repo.answers.write().await.insert(id, answer);
       Ok(warp::reply::with_status("Answer added", StatusCode::OK))
     }
     _ => Err(warp::reject::custom(Error::MissingParameters)),
