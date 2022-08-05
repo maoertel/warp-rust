@@ -132,6 +132,7 @@ dependencies = [
 name = "deletewarp"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "parking_lot 0.10.2",
  "reqwest",
  "serde",
