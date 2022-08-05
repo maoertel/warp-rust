@@ -1,12 +1,11 @@
-use std::num::ParseIntError;
-
 use reqwest::StatusCode;
+use std::num::ParseIntError;
 use uuid::Uuid;
 use warp::{body::BodyDeserializeError, cors::CorsForbidden, reject::Reject, Rejection, Reply};
 
 #[derive(Debug)]
 pub enum Error {
-  ParseError(std::num::ParseIntError),
+  Parse(std::num::ParseIntError),
   MissingParameters,
   QuestionNotFound(Uuid),
 }
@@ -16,7 +15,7 @@ impl Reject for Error {}
 impl std::fmt::Display for Error {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      Error::ParseError(error) => write!(f, "{}", error),
+      Error::Parse(error) => write!(f, "{}", error),
       Error::MissingParameters => write!(f, "Missing parameter"),
       Error::QuestionNotFound(id) => write!(f, "Question with id {id} not found."),
     }
@@ -25,7 +24,7 @@ impl std::fmt::Display for Error {
 
 impl From<ParseIntError> for Error {
   fn from(error: ParseIntError) -> Self {
-    Error::ParseError(error)
+    Error::Parse(error)
   }
 }
 

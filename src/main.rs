@@ -1,12 +1,12 @@
-pub mod error;
+mod answers;
+mod error;
 mod model;
-mod question_repo;
-mod question_routes;
+mod persistence;
+mod questions;
 mod server;
 
+use persistence::Store;
 use std::sync::Arc;
-
-use question_repo::Store;
 
 lazy_static::lazy_static! {
     static ref STORE: Arc<Store> = Arc::new(Store::new());

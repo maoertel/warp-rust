@@ -1,15 +1,13 @@
-use std::{convert::Infallible, sync::Arc};
-
+use crate::{answers, error::return_error, persistence::Store, questions};
 use reqwest::Method;
+use std::{convert::Infallible, sync::Arc};
 use uuid::Uuid;
 use warp::Filter;
-
-use crate::{error::return_error, question_repo::Store};
 
 static QUESTION_PATH: &str = "questions";
 static ANSWER_PATH: &str = "answers";
 
-pub(crate) async fn start<'a>(store: &'static Arc<Store>) {
+pub(crate) async fn start(store: &'static Arc<Store>) {
   let cors = warp::cors()
     .allow_any_origin()
     .allow_header("content-type")
@@ -20,14 +18,14 @@ pub(crate) async fn start<'a>(store: &'static Arc<Store>) {
     .and(warp::path::end())
     .and(warp::query())
     .and(inject(store))
-    .and_then(Store::get_questions);
+    .and_then(questions::get);
 
   let add_question = warp::post()
     .and(warp::path(QUESTION_PATH))
     .and(warp::path::end())
     .and(inject(store))
     .and(warp::body::json())
-    .and_then(Store::add_question);
+    .and_then(questions::add);
 
   let update_question = warp::put()
     .and(warp::path(QUESTION_PATH))
@@ -35,21 +33,21 @@ pub(crate) async fn start<'a>(store: &'static Arc<Store>) {
     .and(warp::path::param::<Uuid>())
     .and(warp::path::end())
     .and(warp::body::json())
-    .and_then(Store::update_question);
+    .and_then(questions::update);
 
   let delete_question = warp::delete()
     .and(warp::path(QUESTION_PATH))
     .and(inject(store))
     .and(warp::path::param::<Uuid>())
     .and(warp::path::end())
-    .and_then(Store::delete_question);
+    .and_then(questions::delete);
 
   let add_answer = warp::post()
     .and(warp::path(ANSWER_PATH))
     .and(warp::path::end())
     .and(inject(store))
     .and(warp::body::form())
-    .and_then(Store::add_answer);
+    .and_then(answers::add);
 
   let routes = get_questions
     .or(add_question)

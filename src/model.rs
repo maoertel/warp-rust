@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
 use crate::error::Error;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct Question {
