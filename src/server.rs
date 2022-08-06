@@ -2,12 +2,18 @@ use crate::{answers, error::return_error, persistence::Store, questions};
 use reqwest::Method;
 use std::{convert::Infallible, sync::Arc};
 use uuid::Uuid;
-use warp::Filter;
+use warp::{
+  log::{Info, Log},
+  Filter,
+};
 
 static QUESTION_PATH: &str = "questions";
 static ANSWER_PATH: &str = "answers";
 
-pub(crate) async fn start(store: &'static Arc<Store>) {
+pub(crate) async fn start<F>(store: &'static Arc<Store>, log: Log<F>)
+where
+  F: Fn(Info<'_>) + Clone + Send + Sync + 'static,
+{
   let cors = warp::cors()
     .allow_any_origin()
     .allow_header("content-type")
@@ -55,6 +61,7 @@ pub(crate) async fn start(store: &'static Arc<Store>) {
     .or(delete_question)
     .or(add_answer)
     .with(cors)
+    .with(log)
     .recover(return_error);
 
   warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
