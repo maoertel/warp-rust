@@ -5,17 +5,24 @@ use crate::{
 };
 use reqwest::StatusCode;
 use std::{collections::HashMap, sync::Arc};
+use tracing::{info, instrument};
 use uuid::Uuid;
 use warp::{Rejection, Reply};
 
+#[instrument]
 pub(crate) async fn get(params: HashMap<String, String>, repo: Arc<Store>) -> Result<impl Reply, Rejection> {
+  info!("Querying questions");
   let question_pairs = repo.questions.read().await;
-  let mut questions: &[&Question] = &question_pairs.values().collect::<Vec<_>>();
+  let questions: &[&Question] = &question_pairs.values().collect::<Vec<_>>();
 
-  if !params.is_empty() {
+  let questions = if !params.is_empty() {
     let Pagination { start, end } = Pagination::extract_pagination(params)?;
-    questions = &questions[start..end];
-  }
+    info!(pagination = true);
+    &questions[start..end]
+  } else {
+    info!(pagination = false);
+    questions
+  };
 
   Ok(warp::reply::json(&questions))
 }

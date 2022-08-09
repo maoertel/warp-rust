@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub(crate) struct Store {
   pub(crate) questions: RwLock<HashMap<Uuid, Question>>,
   pub(crate) answers: RwLock<HashMap<Uuid, Answer>>,
