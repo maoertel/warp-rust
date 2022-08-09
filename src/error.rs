@@ -8,7 +8,6 @@ pub enum Error {
   Parse(std::num::ParseIntError),
   MissingParameters,
   QuestionNotFound(Uuid),
-  InitLogConfig,
 }
 
 impl Reject for Error {}
@@ -19,7 +18,6 @@ impl std::fmt::Display for Error {
       Error::Parse(error) => write!(f, "{}", error),
       Error::MissingParameters => write!(f, "Missing parameter"),
       Error::QuestionNotFound(id) => write!(f, "Question with id {id} not found."),
-      Error::InitLogConfig => write!(f, "Error initialising the log4rs config."),
     }
   }
 }
